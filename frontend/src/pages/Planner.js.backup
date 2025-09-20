@@ -1,0 +1,120 @@
+import React, { useState } from 'react';
+import { Box, Typography, TextField, Button, Chip, Stack, MenuItem, ToggleButtonGroup, ToggleButton, Backdrop, CircularProgress } from '@mui/material';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import SelfImprovementIcon from '@mui/icons-material/SelfImprovement';
+import ExploreIcon from '@mui/icons-material/Explore';
+
+const moodboardOptions = [
+  { key: 'romantic', label: 'Romantic', icon: <FavoriteIcon fontSize="small" />, color: 'secondary' },
+  { key: 'calm', label: 'Calm', icon: <SelfImprovementIcon fontSize="small" />, color: 'primary' },
+  { key: 'exploring', label: 'Exploring', icon: <ExploreIcon fontSize="small" />, color: 'primary' }
+];
+const interestsList = ['Heritage', 'Nightlife', 'Adventure', 'Nature', 'Food', 'Shopping', 'Wellness', 'Festivals'];
+
+function Planner() {
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [travelerType, setTravelerType] = useState('couple');
+  const [budget, setBudget] = useState('');
+  const [duration, setDuration] = useState('');
+  const [region, setRegion] = useState('');
+  const [moodboard, setMoodboard] = useState([]);
+  const [interests, setInterests] = useState([]);
+  const [wishes, setWishes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChipToggle = (value, setter, state) => {
+    setter(state.includes(value) ? state.filter(v => v !== value) : [...state, value]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/itinerary', {
+        userId: 'demo',
+        preferences: {
+          from, to, startDate, endDate, travelerType,
+          budget, duration, region,
+          moodboard,
+          interests,
+          wishes: wishes.split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
+        },
+      });
+      localStorage.setItem('itinerary', JSON.stringify(res.data.itinerary));
+      navigate('/itinerary');
+    } catch (err) {
+      alert('Failed to generate itinerary.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mapSrc = to ? `https://www.google.com/maps?q=${encodeURIComponent(to)}&output=embed` : '';
+
+  return (
+    <Box maxWidth={700} mx="auto" mt={4}>
+      <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
+      <Typography variant="h4" gutterBottom>
+        Plan Your Trip
+      </Typography>
+      <form onSubmit={handleSubmit}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField label="From" fullWidth value={from} onChange={(e) => setFrom(e.target.value)} required />
+          <TextField label="To" fullWidth value={to} onChange={(e) => setTo(e.target.value)} required />
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mt={2}>
+          <TextField label="Start Date" type="date" fullWidth InputLabelProps={{ shrink: true }} value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+          <TextField label="End Date" type="date" fullWidth InputLabelProps={{ shrink: true }} value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+        </Stack>
+        <Typography variant="subtitle1" mt={2}>Traveler Type</Typography>
+        <ToggleButtonGroup color="primary" exclusive value={travelerType} onChange={(e, v) => v && setTravelerType(v)}>
+          <ToggleButton value="couple">Couple</ToggleButton>
+          <ToggleButton value="family">Family</ToggleButton>
+          <ToggleButton value="solo">Solo</ToggleButton>
+        </ToggleButtonGroup>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mt={2}>
+          <TextField label="Budget (INR)" type="number" fullWidth value={budget} onChange={(e) => setBudget(e.target.value)} required />
+          <TextField label="Duration (days)" type="number" fullWidth value={duration} onChange={(e) => setDuration(e.target.value)} required />
+          <TextField label="Region" select fullWidth value={region} onChange={(e) => setRegion(e.target.value)} required>
+            <MenuItem value="North">North</MenuItem>
+            <MenuItem value="South">South</MenuItem>
+            <MenuItem value="East">East</MenuItem>
+            <MenuItem value="West">West</MenuItem>
+            <MenuItem value="Central">Central</MenuItem>
+          </TextField>
+        </Stack>
+        <Typography variant="subtitle1" mt={3}>Moodboard</Typography>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          {moodboardOptions.map((m) => (
+            <Chip key={m.key} icon={m.icon} label={m.label} onClick={() => handleChipToggle(m.key, setMoodboard, moodboard)} color={moodboard.includes(m.key) ? m.color : 'default'} sx={{ mb: 1 }} />
+          ))}
+        </Stack>
+        <Typography variant="subtitle1" mt={3}>Interests</Typography>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          {interestsList.map((i) => (
+            <Chip key={i} label={i} onClick={() => handleChipToggle(i, setInterests, interests)} color={interests.includes(i) ? 'primary' : 'default'} sx={{ mb: 1 }} />
+          ))}
+        </Stack>
+        <TextField label="Wishes (comma separated) e.g. foodie, historical, honeymoon" fullWidth margin="normal" value={wishes} onChange={(e) => setWishes(e.target.value)} />
+        {mapSrc && (
+          <Box mt={2} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+            <iframe title="map" src={mapSrc} width="100%" height="240" style={{ border: 0 }} loading="lazy" />
+          </Box>
+        )}
+        <Button type="submit" variant="contained" color="primary" fullWidth size="large" sx={{ mt: 2 }} disabled={loading}>
+          {loading ? 'Generating...' : 'Generate Itinerary'}
+        </Button>
+      </form>
+    </Box>
+  );
+}
+
+export default Planner; 
