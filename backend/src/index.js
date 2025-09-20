@@ -1,11 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors'); // <-- 1. ADD THIS LINE
 const itineraryRoutes = require('./api/itinerary');
 const bookingRoutes = require('./api/booking');
 const userRoutes = require('./api/user');
 require('dotenv').config();
 
 const app = express();
+
+// Middleware
+app.use(cors()); // <-- 2. ADD THIS LINE (before your routes)
 app.use(bodyParser.json());
 
 // Routes
@@ -16,4 +20,4 @@ app.use('/api/user', userRoutes);
 app.get('/', (req, res) => res.send('Trip Planner Backend Running!'));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); 
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
