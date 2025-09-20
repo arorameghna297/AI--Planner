@@ -1,4 +1,5 @@
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin'); // <-- 1. NEW: Import the plugin
 
 module.exports = {
   entry: './src/index.js',
@@ -25,6 +26,15 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.jsx'],
   },
+  
+  // v-- 2. NEW: Add the entire plugins section --v
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html', // This tells webpack to use your existing HTML file as a template
+    }),
+  ],
+  // ^-- End of new section --^
+
   devServer: {
     static: path.join(__dirname, 'public'),
     historyApiFallback: true,
@@ -34,4 +44,4 @@ module.exports = {
       '/api': 'http://localhost:5001',
     },
   },
-}; 
+};
