@@ -118,7 +118,9 @@ function Planner() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post('/api/itinerary', {
+      // The Fix: Use the full backend URL from the environment variable
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const res = await axios.post(`${apiUrl}/api/itinerary`, {
         userId: 'demo',
         preferences: {
           from, to, startDate, endDate, travelerType,
@@ -131,6 +133,8 @@ function Planner() {
       localStorage.setItem('itinerary', JSON.stringify(res.data.itinerary));
       navigate('/itinerary');
     } catch (err) {
+      // Also, it's helpful to log the actual error to the console for debugging
+      console.error("Error generating itinerary:", err);
       alert('Failed to generate itinerary.');
     } finally {
       setLoading(false);
